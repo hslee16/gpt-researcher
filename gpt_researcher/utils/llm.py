@@ -6,6 +6,7 @@ from typing import Any
 
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
+from langchain_core.rate_limiters import InMemoryRateLimiter
 
 from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
 
@@ -14,6 +15,12 @@ from .costs import estimate_llm_cost
 from .validators import Subtopics
 import os
 
+
+rate_limiter = InMemoryRateLimiter(
+    requests_per_second=1.0,  # 0.1 <-- Super slow! We can only make a request once every 10 seconds!!
+    check_every_n_seconds=0.1,  # Wake up every 100 ms to check whether allowed to make a request,
+    max_bucket_size=10,  # Controls the maximum burst size.
+)
 
 def get_llm(llm_provider, **kwargs):
     from gpt_researcher.llm_provider import GenericLLMProvider
@@ -139,7 +146,6 @@ async def construct_subtopics(
             provider_kwargs['max_tokens'] = config.smart_token_limit
 
         provider = get_llm(config.smart_llm_provider, **provider_kwargs)
-
         model = provider.llm
 
         chain = prompt | model | parser

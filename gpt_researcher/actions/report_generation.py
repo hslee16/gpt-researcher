@@ -255,16 +255,16 @@ async def generate_report(
         content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
     try:
         report = await create_chat_completion(
-            model=cfg.smart_llm_model,
+            model=cfg.fast_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
                 {"role": "user", "content": content},
             ],
-            temperature=0.35,
-            llm_provider=cfg.smart_llm_provider,
-            stream=True,
+            temperature=0.0,
+            llm_provider=cfg.fast_llm_provider,
+            stream=False,
             websocket=websocket,
-            max_tokens=cfg.smart_token_limit,
+            max_tokens=cfg.fast_token_limit,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
             **kwargs
