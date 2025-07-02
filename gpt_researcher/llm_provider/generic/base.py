@@ -33,6 +33,7 @@ _SUPPORTED_PROVIDERS = {
     "vllm_openai",
     "aimlapi",
     "netmind",
+    "perplexity",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -245,6 +246,21 @@ class GenericLLMProvider:
             from langchain_netmind import ChatNetmind
 
             llm = ChatNetmind(**kwargs)
+        elif provider == "perplexity":
+            _check_pkg("langchain_perplexity")
+            from langchain_perplexity import ChatPerplexity
+            from langchain_core.rate_limiters import InMemoryRateLimiter
+
+            rate_limiter = InMemoryRateLimiter(
+                requests_per_second=1.0,
+                check_every_n_seconds=0.1,
+                max_bucket_size=10,
+            )
+
+            llm = ChatPerplexity(
+                    pplx_api_key=os.environ["PPLX_API_KEY"],
+                    rate_limiter=rate_limiter,
+                    **kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
