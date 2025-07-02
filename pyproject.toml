@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9.2"
+python = ">=3.11"
 aiofiles = ">=23.2.1"
 arxiv = ">=2.0.0"
 beautifulsoup4 = ">=4.12.2"
