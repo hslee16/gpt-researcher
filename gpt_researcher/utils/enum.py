@@ -19,6 +19,7 @@ class ReportSource(Enum):
     LangChainVectorStore = "langchain_vectorstore"
     Static = "static"
     Hybrid = "hybrid"
+    LangChainVectorStoreWeb = "langchain_vectorstore_web"
 
 
 class Tone(Enum):

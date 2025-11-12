@@ -166,6 +166,24 @@ class ResearchConductor:
             )
         elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
             research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
+        # Combined existing vectorstore search with web search
+        elif self.researcher.report_source == ReportSource.LangChainVectorStoreWeb.value:
+            # Get context from existing vectorstore (no re-processing)
+            vectorstore_context = await self._get_context_by_vectorstore(
+                self.researcher.query,
+                self.researcher.vector_store_filter
+            )
+            # Get context from web search
+            web_context = await self._get_context_by_web_search(
+                self.researcher.query,
+                [],
+                self.researcher.query_domains
+            )
+            # Combine both contexts using the same method as hybrid mode
+            research_data = self.researcher.prompt_family.join_local_web_documents(
+                vectorstore_context,
+                web_context
+            )
 
         # Rank and curate the sources
         self.researcher.context = research_data
