@@ -29,22 +29,46 @@ class ResearchConductor:
         Returns:
             List of queries
         """
-        await stream_output(
-            "logs",
-            "planning_research",
-            f"🌐 Browsing the web to learn more about the task: {query}...",
-            self.researcher.websocket,
+        # Check if we're using vectorstore-only research (no web search needed)
+        from ..utils.enum import ReportSource
+        is_vectorstore_only = (
+            self.researcher.report_source == ReportSource.LangChainVectorStore.value
         )
 
-        search_results = await get_search_results(query, self.researcher.retrievers[0], query_domains, researcher=self.researcher)
-        self.logger.info(f"Initial search results obtained: {len(search_results)} results")
+        if is_vectorstore_only:
+            # Skip web search AND sub-query generation for vectorstore-only research
+            # Return the original query as the only "sub-query" to avoid LLM calls with empty context
+            self.logger.info("Using vectorstore-only mode - skipping web search and sub-query generation")
+            await stream_output(
+                "logs",
+                "planning_research",
+                f"🤔 Using vectorstore-only research mode - searching directly for: {query}...",
+                self.researcher.websocket,
+            )
+            # Return just the original query, similar to MCP retriever behavior
+            return [query]
+        else:
+            # Perform web search for context
+            await stream_output(
+                "logs",
+                "planning_research",
+                f"🌐 Browsing the web to learn more about the task: {query}...",
+                self.researcher.websocket,
+            )
 
-        await stream_output(
-            "logs",
-            "planning_research",
-            f"🤔 Planning the research strategy and subtasks...",
-            self.researcher.websocket,
-        )
+            try:
+                search_results = await get_search_results(query, self.researcher.retrievers[0], query_domains, researcher=self.researcher)
+                self.logger.info(f"Initial search results obtained: {len(search_results)} results")
+            except Exception as e:
+                self.logger.warning(f"Web search failed: {e}. Proceeding with empty search results.")
+                search_results = []
+
+            await stream_output(
+                "logs",
+                "planning_research",
+                f"🤔 Planning the research strategy and subtasks...",
+                self.researcher.websocket,
+            )
 
         retriever_names = [r.__name__ for r in self.researcher.retrievers]
         # Remove duplicate logging - this will be logged once in conduct_research instead
