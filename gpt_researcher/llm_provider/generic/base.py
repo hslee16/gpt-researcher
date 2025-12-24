@@ -10,6 +10,10 @@ from colorama import Fore, Style, init
 import os
 from enum import Enum
 
+# Default timeout for LLM API calls (in seconds)
+# Prevents hung calls from blocking forever
+DEFAULT_LLM_TIMEOUT = 300  # 5 minutes
+
 _SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",
@@ -103,10 +107,18 @@ class GenericLLMProvider:
             if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
                 kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
 
+            # Add default timeout to prevent hung API calls
+            if "timeout" not in kwargs:
+                kwargs["timeout"] = DEFAULT_LLM_TIMEOUT
+
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
             _check_pkg("langchain_anthropic")
             from langchain_anthropic import ChatAnthropic
+
+            # Add default timeout to prevent hung API calls
+            if "timeout" not in kwargs:
+                kwargs["timeout"] = DEFAULT_LLM_TIMEOUT
 
             llm = ChatAnthropic(**kwargs)
         elif provider == "azure_openai":
@@ -116,6 +128,10 @@ class GenericLLMProvider:
             if "model" in kwargs:
                 model_name = kwargs.get("model", None)
                 kwargs = {"azure_deployment": model_name, **kwargs}
+
+            # Add default timeout to prevent hung API calls
+            if "timeout" not in kwargs:
+                kwargs["timeout"] = DEFAULT_LLM_TIMEOUT
 
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
