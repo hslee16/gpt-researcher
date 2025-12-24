@@ -42,7 +42,9 @@ class ContextManager:
             vector_store=self.researcher.vector_store, filter=filter, prompt_family=self.researcher.prompt_family,
             **self.researcher.kwargs
         )
-        return await vectorstore_compressor.async_get_context(query=query, max_results=8)
+        # Use a high max_results to ensure all relevant pages are retrieved
+        # especially for document-only research where we want comprehensive coverage
+        return await vectorstore_compressor.async_get_context(query=query, max_results=20)
 
     async def get_similar_written_contents_by_draft_section_titles(
         self,

@@ -54,7 +54,8 @@ async def choose_agent(
 async def handle_json_error(response):
     try:
         agent_dict = json_repair.loads(response)
-        if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
+        # Check that json_repair returned a dict (it may return empty string for empty input)
+        if isinstance(agent_dict, dict) and agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
             return agent_dict["server"], agent_dict["agent_role_prompt"]
     except Exception as e:
         print(f"⚠️ Error in reading JSON and failed to repair with json_repair: {e}")
